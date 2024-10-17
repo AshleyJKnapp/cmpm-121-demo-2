@@ -24,12 +24,15 @@ ctx.lineWidth = 2;
 
 // Stroke recording and Drawing
 const drawingChanged = new Event("drawing-changed");
-let strokes: number[][][] = [[]];
-let numStroke = 0;
+let strokes: number[][][] = [];
+let redoStack: number[][][] = [];
+let numStroke = -1;
 let isDrawing = false;
 
 // Record Strokes
 canvas.addEventListener("mousedown", (event) => {
+    strokes.push([]);
+    numStroke++;
     strokes[numStroke].push([event.offsetX, event.offsetY]);
     isDrawing = true;
     console.log("mouseDown");
@@ -42,20 +45,24 @@ canvas.addEventListener("mousemove", (event) => {
     }
 });
 
-canvas.addEventListener("mouseup", (event) => {
+document.addEventListener("mouseup", (event) => {
     if (isDrawing) {
         strokes[numStroke].push([event.offsetX, event.offsetY]);
         isDrawing = false;
-        strokes.push([]);
-        numStroke++;
+        canvas.dispatchEvent(drawingChanged);
+        // Undo is probably available now, enable it
+        undoRedoActiveCheck();
     }
 });
 
 // Clear and redraws all lines as instructed
 canvas.addEventListener("drawing-changed", function () {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Iterate through each stroke
     for (let i = 0; i < strokes.length; i++){
+        // Iterate through each point (in the stroke)
         for (let j = 1; j < strokes[i].length; j++){
+            // draw a line from the previous points (j-1) to the current point (j)
             drawLine(ctx, strokes[i][j-1][0], strokes[i][j-1][1], strokes[i][j][0], strokes[i][j][1]);
         }
     }
@@ -70,6 +77,7 @@ function drawLine(line: CanvasRenderingContext2D, x1: number, y1: number, x2: nu
     line.closePath();
 }
 
+
 // -- Buttons --
 
 // Clear Canvas
@@ -78,7 +86,56 @@ clrBtn.innerHTML = "clear";
 app.append(clrBtn);
 
 clrBtn.addEventListener("click", function () {
-    strokes = [[]];
-    numStroke = 0;
+    // Remove all recorded strokes
+    strokes = [];
+    numStroke = -1;
+
+    // Clear the undo/redo array and disable the corresponding buttons
+    redoStack = [];
+    undoRedoActiveCheck();
+
+    // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
+
+// Undo Btn
+const undoBtn = document.createElement("button");
+undoBtn.innerHTML = "undo";
+undoBtn.disabled = true;
+app.append(undoBtn);
+
+undoBtn.addEventListener("click", function () {
+    if (strokes.length){
+        redoStack.push(strokes.pop()!);
+        canvas.dispatchEvent(drawingChanged);
+        numStroke--;
+    }
+    // Check if we need to disable the buttons
+    undoRedoActiveCheck();
+});
+
+// Redo Btn
+const redoBtn = document.createElement("button");
+redoBtn.innerHTML = "redo";
+redoBtn.disabled = true;
+app.append(redoBtn);
+
+redoBtn.addEventListener("click", function () {
+    if (redoStack.length){
+        strokes.push(redoStack.pop()!);
+        canvas.dispatchEvent(drawingChanged);
+        numStroke++;
+    }
+    // Check if we need to disable the buttons
+    undoRedoActiveCheck();
+});
+
+
+// --- Helper Functions ---
+
+function undoRedoActiveCheck() {
+    // Disable if there are no strokes to refer to in redoStack
+    redoBtn.disabled = !redoStack.length;
+    // Disable if there are no strokes to refer to in stroke
+    undoBtn.disabled = !strokes.length;
+}
