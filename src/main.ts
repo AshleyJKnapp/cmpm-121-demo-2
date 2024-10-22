@@ -22,11 +22,17 @@ app.append(canvas);
 
 interface Displayable {
     display(ctx: CanvasRenderingContext2D): void;
-    addPoint (x: number, y: number): void;
+    addPoint(x: number, y: number): void;
+    setSize(s: number): void;
 }
 
 function DisplayObject(): Displayable {
     const pointsArr: {x: number; y: number}[] = [];
+    let lineSize: number;
+
+    function setSize(s: number){
+        lineSize = s;
+    }
 
     function addPoint(x: number, y: number){
         const point = {x, y};
@@ -37,11 +43,12 @@ function DisplayObject(): Displayable {
         // Iterate through each point in this stroke
         for (let i = 1; i < pointsArr.length; i++){
             // draw a line from the previous points (i-1) to the current point (i)
-            drawLine(ctx, pointsArr[i-1].x, pointsArr[i-1].y, pointsArr[i].x, pointsArr[i].y);
+            drawLine(ctx, lineSize, pointsArr[i-1].x, pointsArr[i-1].y, pointsArr[i].x, pointsArr[i].y);
         }
     }
 
-    function drawLine(line: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
+    function drawLine(line: CanvasRenderingContext2D, size: number, x1: number, y1: number, x2: number, y2: number) {
+        line.lineWidth = size;
         line.beginPath();
         line.moveTo(x1, y1);
         line.lineTo(x2, y2);
@@ -49,26 +56,23 @@ function DisplayObject(): Displayable {
         line.closePath();
     }
 
-    return {display, addPoint};
+    return {display, addPoint, setSize};
 }
 
 
 // -- Drawing --
-// Line Settings
-ctx.strokeStyle = "black";
-ctx.lineWidth = 2;
-
 // Stroke recording and Drawing
 const drawingChanged = new Event("drawing-changed");
 let strokes: Displayable[] = [];
 let redoStack: Displayable[] = [];
 let isDrawing = false;
-
+let currentSize = 2;
 let currentLine: Displayable;
 
 // Record Strokes
 canvas.addEventListener("mousedown", (event) => {
     currentLine = DisplayObject();
+    currentLine.setSize(currentSize);
     currentLine.addPoint(event.offsetX, event.offsetY);
     strokes.push(currentLine);
     isDrawing = true;
@@ -152,8 +156,39 @@ redoBtn.addEventListener("click", function () {
     undoRedoActiveCheck();
 });
 
+// -- Different Pens --
+
+// Thin Btn
+const thinBtn = document.createElement("button");
+thinBtn.innerHTML = "Thin";
+app.append(thinBtn);
+
+thinBtn.addEventListener("click", function () {
+    currentSize = 2;
+    selectTool(thinBtn);
+});
+
+// Thick Btn
+const thickBtn = document.createElement("button");
+thickBtn.innerHTML = "Thick";
+app.append(thickBtn);
+
+thickBtn.addEventListener("click", function () {
+    currentSize = 5;
+    selectTool(thickBtn);
+});
 
 // --- Helper Functions ---
+
+// For highlighting the currently selected tool
+function selectTool(selectedButton: HTMLElement): void {
+    // Clear the selected state from both buttons
+    thinBtn.classList.remove('selectedTool');
+    thickBtn.classList.remove('selectedTool');
+  
+    // Apply the selected state to the active button
+    selectedButton.classList.add('selectedTool');
+  }
 
 function undoRedoActiveCheck() {
     // Disable if there are no strokes to refer to in redoStack
