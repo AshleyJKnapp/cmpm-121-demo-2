@@ -18,7 +18,9 @@ canvas.height = canvas.width = 256;
 app.append(canvas);
 
 
-// --- Displaying ---
+// -----------------------------------------------------
+// --- Functions ---
+// -----------------------------------------------------
 
 interface Displayable {
     display(ctx: CanvasRenderingContext2D): void;
@@ -47,7 +49,8 @@ function DisplayStroke(): Displayable {
         }
     }
 
-    function drawStroke(line: CanvasRenderingContext2D, size: number, x1: number, y1: number, x2: number, y2: number) {
+    function drawStroke(line: CanvasRenderingContext2D, size: number,
+        x1: number, y1: number, x2: number, y2: number) {
         line.lineWidth = size;
         line.beginPath();
         line.moveTo(x1, y1);
@@ -59,9 +62,37 @@ function DisplayStroke(): Displayable {
     return {display, addPoint, setSize};
 }
 
+// -----------------------------------------------------
+
+function DisplaySticker(str: string): Displayable {
+    let point: {x: number; y: number};
+    let width: number;
+    const sticker = str;
+
+    function setSize(s: number){
+        width = s;
+    }
+
+    // Update Point
+    function addPoint(x: number, y: number){
+        point = {x, y};
+    }
+
+    function display(ctx: CanvasRenderingContext2D) {
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+        ctx.font = width+"px serif";
+        ctx.fillText(sticker, point.x, point.y)
+    }
+
+    return {display, addPoint, setSize};
+}
+
+// -----------------------------------------------------
+
 function DisplayCursor(): Displayable {
     let point: {x: number; y: number};
-    let lineSize: number = 2;
+    let lineSize: number;
 
     function setSize(s: number){
         lineSize = s;
@@ -83,32 +114,41 @@ function DisplayCursor(): Displayable {
     return {display, addPoint, setSize};
 }
 
+// -----------------------------------------------------
+// -- Drawing --
+// -----------------------------------------------------
 
-        // -- Drawing --
 // Stroke recording and Drawing
 const drawingChanged = new Event("drawing-changed");
 let strokes: Displayable[] = [];
 let redoStack: Displayable[] = [];
 let isDrawing = false;
+let stickerMode = false;
 let currentSize = 2;
 let currentLine: Displayable;
+let currentSticker = "";
 const canvasCursor: Displayable = DisplayCursor();
-
 
 // Record Strokes
 canvas.addEventListener("mousedown", (event) => {
-    currentLine = DisplayStroke();
+    if (stickerMode) {
+        currentLine = DisplaySticker(currentSticker);
+    } else {
+        currentLine = DisplayStroke();
+        isDrawing = true;
+    }
     currentLine.setSize(currentSize);
     currentLine.addPoint(event.offsetX, event.offsetY);
     strokes.push(currentLine);
-    isDrawing = true;
+    // Enable Undo Btn
+    redoStack = [];
+    undoRedoActiveCheck();
 });
 
 canvas.addEventListener("mousemove", (event) => {
     if (isDrawing) {
         currentLine.addPoint(event.offsetX, event.offsetY);
-    } 
-    else {
+    } else {
         const toolMovedEvent = new CustomEvent("tool-moved", {
             detail: { x: event.offsetX, y: event.offsetY }
         });
@@ -118,16 +158,16 @@ canvas.addEventListener("mousemove", (event) => {
     canvas.dispatchEvent(drawingChanged);
 });
 
-document.addEventListener("mouseup", (event) => {
+canvas.addEventListener("mouseup", (event) => {
     if (isDrawing) {
         currentLine.addPoint(event.offsetX, event.offsetY);
         isDrawing = false;
         canvas.dispatchEvent(drawingChanged);
-        // Enable Undo Btn
-        redoStack = [];
-        undoRedoActiveCheck();
+    } else if (stickerMode) {
+        currentLine.display(ctx);
     }
 });
+
 
 // -- Custom Events --
 
@@ -144,6 +184,7 @@ canvas.addEventListener("drawing-changed", function () {
     }
 });
 
+// Sets the cursor up to be drawn
 canvas.addEventListener('tool-moved', (event) => {
     const detail = (event as CustomEvent).detail;
     const {x,y} = detail;
@@ -154,37 +195,54 @@ canvas.addEventListener('tool-moved', (event) => {
 });
 
 
+// -----------------------------------------------------
+// ---- Buttons ----
+// -----------------------------------------------------
 
-        // ---- Buttons ----
 // -- Initializations --
 // Clear Canvas
 const clrBtn = document.createElement("button");
 clrBtn.innerHTML = "clear";
 app.append(clrBtn);
-// Undo Btn
+// Undo Btn - - - - - - - - - - - - - - - - - - - -
 const undoBtn = document.createElement("button");
 undoBtn.innerHTML = "undo";
 undoBtn.disabled = true;
 app.append(undoBtn);
-// Redo Btn
+// Redo Btn - - - - - - - - - - - - - - - - - - - -
 const redoBtn = document.createElement("button");
 redoBtn.innerHTML = "redo";
 redoBtn.disabled = true;
 app.append(redoBtn);
-// Thin Btn
+// Thin Btn - - - - - - - - - - - - - - - - - - - -
 const thinBtn = document.createElement("button");
 thinBtn.innerHTML = "Thin";
 app.append(thinBtn);
-// Thick Btn
+// Thick Btn - - - - - - - - - - - - - - - - - - - -
 const thickBtn = document.createElement("button");
 thickBtn.innerHTML = "Thick";
 app.append(thickBtn);
+// Sticker1 - - - - - - - - - - - - - - - - - - - -
+const sticker1 = document.createElement("button");
+sticker1.innerHTML = "😂";
+app.append(sticker1);
+// Sticker 2 - - - - - - - - - - - - - - - - - - - -
+const sticker2 = document.createElement("button");
+sticker2.innerHTML = "💩";
+app.append(sticker2);
+// Sticker 3 - - - - - - - - - - - - - - - - - - - -
+const sticker3 = document.createElement("button");
+sticker3.innerHTML = "👹";
+app.append(sticker3);
+
+// Prep
+const toggleButtons: HTMLButtonElement[] = [thinBtn, thickBtn, sticker1, sticker2, sticker3]
 selectTool(thinBtn);
+
 
 // -- Event Listeners --
 // Clear Canvas
 clrBtn.addEventListener("click", function () {
-    console.log(ctx);
     // Remove all recorded strokes
     strokes = [];
 
@@ -219,23 +277,52 @@ redoBtn.addEventListener("click", function () {
 thinBtn.addEventListener("click", function () {
     currentSize = 2;
     selectTool(thinBtn);
+    stickerMode = false;
 });
 
 // Thick Btn
 thickBtn.addEventListener("click", function () {
     currentSize = 5;
     selectTool(thickBtn);
+    stickerMode = false;
+});
+
+// -- Stickers --
+// Sticker1
+sticker1.addEventListener("click", function () {
+    currentSticker = sticker1.innerHTML;
+    currentSize = 50;
+    stickerMode = true;
+    selectTool(sticker1);
+});
+
+// Sticker 2
+sticker2.addEventListener("click", function () {
+    currentSticker = sticker2.innerHTML;
+    currentSize = 50;
+    stickerMode = true;
+    selectTool(sticker2);
+});
+
+// Sticker 3
+sticker3.addEventListener("click", function () {
+    currentSticker = sticker3.innerHTML;
+    currentSize = 50;
+    stickerMode = true;
+    selectTool(sticker3);
 });
 
 
-
-        // --- Helper Functions ---
+// -----------------------------------------------------
+// --- Helper Functions ---
+// -----------------------------------------------------
 
 // For highlighting the currently selected tool
 function selectTool(selectedButton: HTMLElement): void {
-    // Clear the selected state from both buttons
-    thinBtn.classList.remove('selectedTool');
-    thickBtn.classList.remove('selectedTool');
+    // Clear the selected state from the buttons
+    for (const button of toggleButtons){
+        button.classList.remove('selectedTool');
+    }
   
     // Apply the selected state to the active button
     selectedButton.classList.add('selectedTool');
