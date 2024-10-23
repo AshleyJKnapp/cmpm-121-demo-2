@@ -26,7 +26,7 @@ interface Displayable {
     setSize(s: number): void;
 }
 
-function DisplayObject(): Displayable {
+function DisplayStroke(): Displayable {
     const pointsArr: {x: number; y: number}[] = [];
     let lineSize: number;
 
@@ -41,13 +41,13 @@ function DisplayObject(): Displayable {
 
     function display(ctx: CanvasRenderingContext2D) {   
         // Iterate through each point in this stroke
-        for (let i = 1; i < pointsArr.length; i++){
+        for (let i = 1; i < pointsArr.length; i++){     // note that i = 1
             // draw a line from the previous points (i-1) to the current point (i)
-            drawLine(ctx, lineSize, pointsArr[i-1].x, pointsArr[i-1].y, pointsArr[i].x, pointsArr[i].y);
+            drawStroke(ctx, lineSize, pointsArr[i-1].x, pointsArr[i-1].y, pointsArr[i].x, pointsArr[i].y);
         }
     }
 
-    function drawLine(line: CanvasRenderingContext2D, size: number, x1: number, y1: number, x2: number, y2: number) {
+    function drawStroke(line: CanvasRenderingContext2D, size: number, x1: number, y1: number, x2: number, y2: number) {
         line.lineWidth = size;
         line.beginPath();
         line.moveTo(x1, y1);
@@ -59,8 +59,32 @@ function DisplayObject(): Displayable {
     return {display, addPoint, setSize};
 }
 
+function DisplayCursor(): Displayable {
+    let point: {x: number; y: number};
+    let lineSize: number = 2;
 
-// -- Drawing --
+    function setSize(s: number){
+        lineSize = s;
+    }
+
+    // Update Point
+    function addPoint(x: number, y: number){
+        point = {x, y};
+    }
+
+    function display(ctx: CanvasRenderingContext2D) {   
+        // Draw a circle at the point, with lineSize diameter
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, lineSize/2, 0, 2 * Math.PI);
+        ctx.stroke();
+    }
+
+    return {display, addPoint, setSize};
+}
+
+
+        // -- Drawing --
 // Stroke recording and Drawing
 const drawingChanged = new Event("drawing-changed");
 let strokes: Displayable[] = [];
@@ -68,10 +92,12 @@ let redoStack: Displayable[] = [];
 let isDrawing = false;
 let currentSize = 2;
 let currentLine: Displayable;
+const canvasCursor: Displayable = DisplayCursor();
+
 
 // Record Strokes
 canvas.addEventListener("mousedown", (event) => {
-    currentLine = DisplayObject();
+    currentLine = DisplayStroke();
     currentLine.setSize(currentSize);
     currentLine.addPoint(event.offsetX, event.offsetY);
     strokes.push(currentLine);
@@ -81,8 +107,15 @@ canvas.addEventListener("mousedown", (event) => {
 canvas.addEventListener("mousemove", (event) => {
     if (isDrawing) {
         currentLine.addPoint(event.offsetX, event.offsetY);
-    canvas.dispatchEvent(drawingChanged);
+    } 
+    else {
+        const toolMovedEvent = new CustomEvent("tool-moved", {
+            detail: { x: event.offsetX, y: event.offsetY }
+        });
+        
+        canvas.dispatchEvent(toolMovedEvent);
     }
+    canvas.dispatchEvent(drawingChanged);
 });
 
 document.addEventListener("mouseup", (event) => {
@@ -90,29 +123,66 @@ document.addEventListener("mouseup", (event) => {
         currentLine.addPoint(event.offsetX, event.offsetY);
         isDrawing = false;
         canvas.dispatchEvent(drawingChanged);
-        // Undo is probably available now, enable it
+        // Enable Undo Btn
         redoStack = [];
         undoRedoActiveCheck();
     }
 });
 
-// Clear and redraws all lines as instructed
+// -- Custom Events --
+
+// Clear and redraws all lines
 canvas.addEventListener("drawing-changed", function () {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width,canvas.height);
     // Iterate through each stroke
     for (let i = 0; i < strokes.length; i++){
         strokes[i].display(ctx);
     }
+
+    if (!isDrawing){
+        canvasCursor.display(ctx);
+    }
+});
+
+canvas.addEventListener('tool-moved', (event) => {
+    const detail = (event as CustomEvent).detail;
+    const {x,y} = detail;
+
+    // Sets the cursor to mouse position and current pen size
+    canvasCursor.addPoint(x, y);
+    canvasCursor.setSize(currentSize);
 });
 
 
-// -- Buttons --
 
+        // ---- Buttons ----
+// -- Initializations --
 // Clear Canvas
 const clrBtn = document.createElement("button");
 clrBtn.innerHTML = "clear";
 app.append(clrBtn);
+// Undo Btn
+const undoBtn = document.createElement("button");
+undoBtn.innerHTML = "undo";
+undoBtn.disabled = true;
+app.append(undoBtn);
+// Redo Btn
+const redoBtn = document.createElement("button");
+redoBtn.innerHTML = "redo";
+redoBtn.disabled = true;
+app.append(redoBtn);
+// Thin Btn
+const thinBtn = document.createElement("button");
+thinBtn.innerHTML = "Thin";
+app.append(thinBtn);
+// Thick Btn
+const thickBtn = document.createElement("button");
+thickBtn.innerHTML = "Thick";
+app.append(thickBtn);
+selectTool(thinBtn);
 
+// -- Event Listeners --
+// Clear Canvas
 clrBtn.addEventListener("click", function () {
     console.log(ctx);
     // Remove all recorded strokes
@@ -127,58 +197,39 @@ clrBtn.addEventListener("click", function () {
 });
 
 // Undo Btn
-const undoBtn = document.createElement("button");
-undoBtn.innerHTML = "undo";
-undoBtn.disabled = true;
-app.append(undoBtn);
-
 undoBtn.addEventListener("click", function () {
     if (strokes.length){
         redoStack.push(strokes.pop()!);
         canvas.dispatchEvent(drawingChanged);
     }
-    // Check if we need to disable the buttons
     undoRedoActiveCheck();
 });
 
 // Redo Btn
-const redoBtn = document.createElement("button");
-redoBtn.innerHTML = "redo";
-redoBtn.disabled = true;
-app.append(redoBtn);
-
 redoBtn.addEventListener("click", function () {
     if (redoStack.length){
         strokes.push(redoStack.pop()!);
         canvas.dispatchEvent(drawingChanged);
     }
-    // Check if we need to disable the buttons
     undoRedoActiveCheck();
 });
 
 // -- Different Pens --
-
 // Thin Btn
-const thinBtn = document.createElement("button");
-thinBtn.innerHTML = "Thin";
-app.append(thinBtn);
-
 thinBtn.addEventListener("click", function () {
     currentSize = 2;
     selectTool(thinBtn);
 });
 
 // Thick Btn
-const thickBtn = document.createElement("button");
-thickBtn.innerHTML = "Thick";
-app.append(thickBtn);
-
 thickBtn.addEventListener("click", function () {
     currentSize = 5;
     selectTool(thickBtn);
 });
 
-// --- Helper Functions ---
+
+
+        // --- Helper Functions ---
 
 // For highlighting the currently selected tool
 function selectTool(selectedButton: HTMLElement): void {

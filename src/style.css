@@ -92,6 +92,7 @@ canvas {
   border-color: #1a1a1a;
   filter: drop-shadow(4px 8px 7px #33334e);
   background-color: white;
+  cursor: none;
 }
 
 @media (prefers-color-scheme: light) {
