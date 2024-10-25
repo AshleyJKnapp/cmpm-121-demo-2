@@ -1,13 +1,13 @@
 import "./style.css";
 
 // General Set Up
-const APP_NAME = "ashley's silly little drawing app for class";
+const APP_NAME = "let's get cooking (drawing)";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const header = document.createElement("h1");
 
 document.title = APP_NAME;
 app.innerHTML = APP_NAME;
-header.innerHTML = "Let's get cooking (drawing)"
+header.innerHTML = "human i rember your drawings"
 app.append(header);
 
 // Canvas Set Up
@@ -26,6 +26,7 @@ interface Displayable {
     display(ctx: CanvasRenderingContext2D): void;
     addPoint(x: number, y: number): void;
     setSize(s: number): void;
+    scale(s: number, ctx: CanvasRenderingContext2D): void;
 }
 
 function DisplayStroke(): Displayable {
@@ -41,7 +42,7 @@ function DisplayStroke(): Displayable {
         pointsArr.push(point);
     }
 
-    function display(ctx: CanvasRenderingContext2D) {   
+    function display(ctx: CanvasRenderingContext2D, ) {   
         // Iterate through each point in this stroke
         for (let i = 1; i < pointsArr.length; i++){     // note that i = 1
             // draw a line from the previous points (i-1) to the current point (i)
@@ -59,7 +60,25 @@ function DisplayStroke(): Displayable {
         line.closePath();
     }
 
-    return {display, addPoint, setSize};
+    // Scales the object by s and displays to ctx
+    function scale(s: number, ctx: CanvasRenderingContext2D) {
+        const scaledArr: {x: number; y: number}[] = [];
+        const scaledLine: number = lineSize * s;
+        for (let i = 0; i < pointsArr.length; i++){
+            const x = pointsArr[i].x *= s;
+            const y = pointsArr[i].y *= s;
+            const tempPoint = {x, y};
+            scaledArr.push(tempPoint);
+        }
+
+        // Iterate through each point in this stroke
+        for (let i = 1; i < scaledArr.length; i++){     // note that i = 1
+            // Draw a line from the previous points (i-1) to the current point (i)
+            drawStroke(ctx, scaledLine, scaledArr[i-1].x, scaledArr[i-1].y, scaledArr[i].x, scaledArr[i].y);
+        }
+    }
+
+    return {display, addPoint, setSize, scale};
 }
 
 // -----------------------------------------------------
@@ -85,7 +104,15 @@ function DisplaySticker(str: string): Displayable {
         ctx.fillText(sticker, point.x, point.y)
     }
 
-    return {display, addPoint, setSize};
+    // Scales the object by s and displays to ctx
+    function scale(s: number, ctx: CanvasRenderingContext2D) {
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+        ctx.font = s*width+"px serif";
+        ctx.fillText(sticker, point.x*s, point.y*s)
+    }
+
+    return {display, addPoint, setSize, scale};
 }
 
 // -----------------------------------------------------
@@ -111,7 +138,17 @@ function DisplayCursor(): Displayable {
         ctx.stroke();
     }
 
-    return {display, addPoint, setSize};
+    // Scales the object by s and displays to ctx
+    function scale(s: number, ctx: CanvasRenderingContext2D) {
+        // currently there is no intention of displaying a cursor
+        // Draw a circle at the point, with lineSize diameter
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(point.x*s, point.y*s, s*(lineSize/2), 0, 2 * Math.PI);
+        ctx.stroke();
+    }
+
+    return {display, addPoint, setSize, scale};
 }
 
 // -----------------------------------------------------
@@ -201,32 +238,38 @@ canvas.addEventListener('tool-moved', (event) => {
 
 // -- Initializations --
 const stickerArr = ["😂","💩","👹"]
+const btnDiv = document.createElement("div");
+app.append(btnDiv);
 // Clear Canvas
 const clrBtn = document.createElement("button");
 clrBtn.innerHTML = "clear";
-app.append(clrBtn);
+btnDiv.append(clrBtn);
 // Undo Btn - - - - - - - - - - - - - - - - - - - -
 const undoBtn = document.createElement("button");
 undoBtn.innerHTML = "undo";
 undoBtn.disabled = true;
-app.append(undoBtn);
+btnDiv.append(undoBtn);
 // Redo Btn - - - - - - - - - - - - - - - - - - - -
 const redoBtn = document.createElement("button");
 redoBtn.innerHTML = "redo";
 redoBtn.disabled = true;
-app.append(redoBtn);
+btnDiv.append(redoBtn);
 // Thin Btn - - - - - - - - - - - - - - - - - - - -
 const thinBtn = document.createElement("button");
-thinBtn.innerHTML = "Thin";
-app.append(thinBtn);
+thinBtn.innerHTML = "thin";
+btnDiv.append(thinBtn);
 // Thick Btn - - - - - - - - - - - - - - - - - - - -
 const thickBtn = document.createElement("button");
-thickBtn.innerHTML = "Thick";
-app.append(thickBtn);
+thickBtn.innerHTML = "thick";
+btnDiv.append(thickBtn);
+// Export Btn - - - - - - - - - - - - - - - - - - - -
+const exportBtn = document.createElement("button");
+exportBtn.innerHTML = "export";
+btnDiv.append(exportBtn);
 // Add Sticker Btn - - - - - - - - - - - - - - - - - - - -
 const addStickerBtn = document.createElement("button");
-addStickerBtn.innerHTML = "Add Custom Sticker";
-app.append(addStickerBtn);
+addStickerBtn.innerHTML = "add custom sticker";
+btnDiv.append(addStickerBtn);
 
 
 // Prep
@@ -293,6 +336,22 @@ for (const i in stickerArr){
     createStickerBtn(stickerArr[i]);
 }
 
+// Export Btn
+exportBtn.addEventListener("click", function () {
+    const canvasEx = document.createElement("canvas");
+    const ctxEx = <CanvasRenderingContext2D>canvasEx.getContext("2d");
+    canvasEx.height = canvasEx.width = 1024;
+    
+    for (let i = 0; i < strokes.length; i++){
+        strokes[i].scale(4, ctxEx);
+    }
+
+    const anchor = document.createElement("a");
+    anchor.href = canvasEx.toDataURL("image/png");
+    anchor.download = "sketchpad.png";
+    anchor.click();
+});
+
 
 // -----------------------------------------------------
 // --- Helper Functions ---
@@ -319,7 +378,7 @@ function undoRedoActiveCheck() {
 function createStickerBtn(sticker: string) {
     const stickerBtn = document.createElement("button");
     stickerBtn.innerHTML = sticker;
-    app.append(stickerBtn);
+    btnDiv.append(stickerBtn);
     toggleButtons.push(stickerBtn);
 
     stickerBtn.addEventListener("click", function () {
