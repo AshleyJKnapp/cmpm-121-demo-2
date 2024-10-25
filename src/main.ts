@@ -200,6 +200,7 @@ canvas.addEventListener('tool-moved', (event) => {
 // -----------------------------------------------------
 
 // -- Initializations --
+const stickerArr = ["😂","💩","👹"]
 // Clear Canvas
 const clrBtn = document.createElement("button");
 clrBtn.innerHTML = "clear";
@@ -222,23 +223,15 @@ app.append(thinBtn);
 const thickBtn = document.createElement("button");
 thickBtn.innerHTML = "Thick";
 app.append(thickBtn);
-// Sticker1 - - - - - - - - - - - - - - - - - - - -
-const sticker1 = document.createElement("button");
-sticker1.innerHTML = "😂";
-app.append(sticker1);
-// Sticker 2 - - - - - - - - - - - - - - - - - - - -
-const sticker2 = document.createElement("button");
-sticker2.innerHTML = "💩";
-app.append(sticker2);
-// Sticker 3 - - - - - - - - - - - - - - - - - - - -
-const sticker3 = document.createElement("button");
-sticker3.innerHTML = "👹";
-app.append(sticker3);
+// Add Sticker Btn - - - - - - - - - - - - - - - - - - - -
+const addStickerBtn = document.createElement("button");
+addStickerBtn.innerHTML = "Add Custom Sticker";
+app.append(addStickerBtn);
+
 
 // Prep
-const toggleButtons: HTMLButtonElement[] = [thinBtn, thickBtn, sticker1, sticker2, sticker3]
+const toggleButtons: HTMLButtonElement[] = [thinBtn, thickBtn]
 selectTool(thinBtn);
-
 
 // -- Event Listeners --
 // Clear Canvas
@@ -287,30 +280,18 @@ thickBtn.addEventListener("click", function () {
     stickerMode = false;
 });
 
-// -- Stickers --
-// Sticker1
-sticker1.addEventListener("click", function () {
-    currentSticker = sticker1.innerHTML;
-    currentSize = 50;
-    stickerMode = true;
-    selectTool(sticker1);
+// Add Sticker Btn
+addStickerBtn.addEventListener("click", function () {
+    const text = prompt("Custom sticker text","🧽");
+    if (text){
+        createStickerBtn(text!);
+    }
 });
 
-// Sticker 2
-sticker2.addEventListener("click", function () {
-    currentSticker = sticker2.innerHTML;
-    currentSize = 50;
-    stickerMode = true;
-    selectTool(sticker2);
-});
-
-// Sticker 3
-sticker3.addEventListener("click", function () {
-    currentSticker = sticker3.innerHTML;
-    currentSize = 50;
-    stickerMode = true;
-    selectTool(sticker3);
-});
+// Create Sticker Buttons
+for (const i in stickerArr){
+    createStickerBtn(stickerArr[i]);
+}
 
 
 // -----------------------------------------------------
@@ -326,11 +307,25 @@ function selectTool(selectedButton: HTMLElement): void {
   
     // Apply the selected state to the active button
     selectedButton.classList.add('selectedTool');
-  }
+}
 
 function undoRedoActiveCheck() {
     // Disable if there are no strokes to refer to in redoStack
     redoBtn.disabled = !redoStack.length;
     // Disable if there are no strokes to refer to in stroke
     undoBtn.disabled = !strokes.length;
+}
+
+function createStickerBtn(sticker: string) {
+    const stickerBtn = document.createElement("button");
+    stickerBtn.innerHTML = sticker;
+    app.append(stickerBtn);
+    toggleButtons.push(stickerBtn);
+
+    stickerBtn.addEventListener("click", function () {
+        currentSticker = stickerBtn.innerHTML;
+        currentSize = 50;
+        stickerMode = true;
+        selectTool(stickerBtn);
+    });
 }
