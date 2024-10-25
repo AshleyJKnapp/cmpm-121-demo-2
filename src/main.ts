@@ -5,8 +5,17 @@ const APP_NAME = "let's get cooking (drawing)";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const header = document.createElement("h1");
 
+// Image setup
+const img = document.createElement("img");
+img.src = "https://preview.redd.it/my-attempt-at-improving-sans-head-in-his-battle-sprite-v0-o5lr3vku0vac1.png?width=512&format=png&auto=webp&s=58c62927deca7791c1035bee4913863e0ba4a7b3";
+img.width = 512/5;
+img.height = 480/5;
+
 document.title = APP_NAME;
 app.innerHTML = APP_NAME;
+const headerDiv = document.createElement("div");
+app.append(headerDiv);
+app.append(img);
 header.innerHTML = "human i rember your drawings"
 app.append(header);
 
@@ -237,9 +246,19 @@ canvas.addEventListener('tool-moved', (event) => {
 // -----------------------------------------------------
 
 // -- Initializations --
-const stickerArr = ["😂","💩","👹"]
+const stickerArr = ["🌭","💩","🎺"]
+const exportDiv = document.createElement("div");
+app.append(exportDiv);
 const btnDiv = document.createElement("div");
 app.append(btnDiv);
+const toolDiv = document.createElement("div");
+app.append(toolDiv);
+const stickerDiv = document.createElement("div");
+app.append(stickerDiv);
+// Export Btn - - - - - - - - - - - - - - - - - - - -
+const exportBtn = document.createElement("button");
+exportBtn.innerHTML = "export";
+exportDiv.append(exportBtn);
 // Clear Canvas
 const clrBtn = document.createElement("button");
 clrBtn.innerHTML = "clear";
@@ -257,19 +276,15 @@ btnDiv.append(redoBtn);
 // Thin Btn - - - - - - - - - - - - - - - - - - - -
 const thinBtn = document.createElement("button");
 thinBtn.innerHTML = "thin";
-btnDiv.append(thinBtn);
+toolDiv.append(thinBtn);
 // Thick Btn - - - - - - - - - - - - - - - - - - - -
 const thickBtn = document.createElement("button");
 thickBtn.innerHTML = "thick";
-btnDiv.append(thickBtn);
-// Export Btn - - - - - - - - - - - - - - - - - - - -
-const exportBtn = document.createElement("button");
-exportBtn.innerHTML = "export";
-btnDiv.append(exportBtn);
+toolDiv.append(thickBtn);
 // Add Sticker Btn - - - - - - - - - - - - - - - - - - - -
 const addStickerBtn = document.createElement("button");
-addStickerBtn.innerHTML = "add custom sticker";
-btnDiv.append(addStickerBtn);
+addStickerBtn.innerHTML = "+";
+stickerDiv.append(addStickerBtn);
 
 
 // Prep
@@ -325,7 +340,7 @@ thickBtn.addEventListener("click", function () {
 
 // Add Sticker Btn
 addStickerBtn.addEventListener("click", function () {
-    const text = prompt("Custom sticker text","🧽");
+    const text = prompt("Custom sticker text","💀");
     if (text){
         createStickerBtn(text!);
     }
@@ -378,7 +393,7 @@ function undoRedoActiveCheck() {
 function createStickerBtn(sticker: string) {
     const stickerBtn = document.createElement("button");
     stickerBtn.innerHTML = sticker;
-    btnDiv.append(stickerBtn);
+    stickerDiv.prepend(stickerBtn);
     toggleButtons.push(stickerBtn);
 
     stickerBtn.addEventListener("click", function () {
