@@ -255,11 +255,37 @@ const toolDiv = document.createElement("div");
 app.append(toolDiv);
 const stickerDiv = document.createElement("div");
 app.append(stickerDiv);
+
+// Size Slider  - - - - - - - - - - - - - - - - - - - -
+const sizeLabel = document.createElement("label");
+sizeLabel.innerHTML = "size";
+app.append(sizeLabel);
+
+const sizeSlider = document.createElement("input");
+sizeSlider.type = "range";
+sizeSlider.name = "size";
+sizeSlider.min = "1";
+sizeSlider.max = "50";
+sizeSlider.id = "sizeSlide";
+app.append(sizeSlider);
+
+const sizeNumLabel = document.createElement("label");
+sizeSlider.valueAsNumber = currentSize;
+sizeNumLabel.innerHTML = ""+sizeSlider.valueAsNumber;
+app.append(sizeNumLabel);
+
+sizeSlider.addEventListener('input', function () {
+    currentSize = sizeSlider.valueAsNumber;
+    sizeNumLabel.innerHTML = ""+sizeSlider.valueAsNumber;
+});
+//  - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
 // Export Btn - - - - - - - - - - - - - - - - - - - -
 const exportBtn = document.createElement("button");
 exportBtn.innerHTML = "export";
 exportDiv.append(exportBtn);
-// Clear Canvas
+// Clear Canvas - - - - - - - - - - - - - - - - - - - -
 const clrBtn = document.createElement("button");
 clrBtn.innerHTML = "clear";
 btnDiv.append(clrBtn);
