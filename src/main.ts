@@ -26,7 +26,6 @@ const ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
 canvas.height = canvas.width = 256;
 app.append(canvas);
 
-
 // -----------------------------------------------------
 // --- Functions ---
 // -----------------------------------------------------
