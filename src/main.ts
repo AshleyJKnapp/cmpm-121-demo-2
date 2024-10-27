@@ -73,8 +73,8 @@ function DisplayStroke(): Displayable {
         const scaledArr: {x: number; y: number}[] = [];
         const scaledLine: number = lineSize * s;
         for (let i = 0; i < pointsArr.length; i++){
-            const x = pointsArr[i].x *= s;
-            const y = pointsArr[i].y *= s;
+            const x = pointsArr[i].x * s;
+            const y = pointsArr[i].y * s;
             const tempPoint = {x, y};
             scaledArr.push(tempPoint);
         }
