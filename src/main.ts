@@ -14,6 +14,9 @@ img.height = 480/5;
 document.title = APP_NAME;
 app.innerHTML = APP_NAME;
 const headerDiv = document.createElement("div");
+const audio = document.getElementById('audio') as HTMLAudioElement;
+audio.volume = 0.3;
+audio.play();
 app.append(headerDiv);
 app.append(img);
 header.innerHTML = "human i remember your drawings"
@@ -188,6 +191,8 @@ canvas.addEventListener("mousedown", (event) => {
     // Enable Undo Btn
     redoStack = [];
     undoRedoActiveCheck();
+
+    audio.play();
 });
 
 canvas.addEventListener("mousemove", (event) => {
@@ -211,6 +216,8 @@ canvas.addEventListener("mouseup", (event) => {
     } else if (stickerMode) {
         currentLine.display(ctx);
     }
+
+    audio.play();
 });
 
 
@@ -328,6 +335,8 @@ clrBtn.addEventListener("click", function () {
 
     // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    audio.play();
 });
 
 // Undo Btn
@@ -337,6 +346,8 @@ undoBtn.addEventListener("click", function () {
         canvas.dispatchEvent(drawingChanged);
     }
     undoRedoActiveCheck();
+
+    audio.play();
 });
 
 // Redo Btn
@@ -346,6 +357,8 @@ redoBtn.addEventListener("click", function () {
         canvas.dispatchEvent(drawingChanged);
     }
     undoRedoActiveCheck();
+
+    audio.play();
 });
 
 // -- Different Pens --
@@ -354,6 +367,8 @@ thinBtn.addEventListener("click", function () {
     currentSize = 2;
     selectTool(thinBtn);
     stickerMode = false;
+
+    audio.play();
 });
 
 // Thick Btn
@@ -361,6 +376,8 @@ thickBtn.addEventListener("click", function () {
     currentSize = 5;
     selectTool(thickBtn);
     stickerMode = false;
+
+    audio.play();
 });
 
 // Add Sticker Btn
@@ -369,11 +386,15 @@ addStickerBtn.addEventListener("click", function () {
     if (text){
         createStickerBtn(text!);
     }
+
+    audio.play();
 });
 
 // Create Sticker Buttons
 for (const i in stickerArr){
     createStickerBtn(stickerArr[i]);
+
+    audio.play();
 }
 
 // Export Btn
@@ -390,6 +411,8 @@ exportBtn.addEventListener("click", function () {
     anchor.href = canvasEx.toDataURL("image/png");
     anchor.download = "sketchpad.png";
     anchor.click();
+
+    audio.play();
 });
 
 

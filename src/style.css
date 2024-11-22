@@ -4,7 +4,7 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
+  color: rgba(69, 165, 255, 0.87);
   background-color: #626262;
 
   font-synthesis: none;
@@ -15,14 +15,16 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: rgba(69, 165, 255, 0.87);
   text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+  color: rgba(69, 165, 255, 0.87);
 }
 
 body {
+  background-image: url("../src/assets/Welcome_To_The_UndergroundTikTokMeme.gif");
+  background-size: 100% 100%;
   margin: 0;
   display: flex;
   place-items: center;
@@ -74,7 +76,7 @@ button {
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: rgba(69, 165, 255, 0.87);
 }
 button:focus,
 button:focus-visible {
@@ -82,8 +84,8 @@ button:focus-visible {
 }
 
 .selectedTool {
-  background-color: gold; 
-  color: black;
+  background-color: white; 
+  color: rgba(69, 165, 255, 0.87);
 }
 
 canvas {
