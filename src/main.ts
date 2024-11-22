@@ -16,7 +16,7 @@ app.innerHTML = APP_NAME;
 const headerDiv = document.createElement("div");
 app.append(headerDiv);
 app.append(img);
-header.innerHTML = "human i rember your drawings"
+header.innerHTML = "human i remember your drawings"
 app.append(header);
 
 // Canvas Set Up
@@ -33,16 +33,16 @@ app.append(canvas);
 interface Displayable {
     display(ctx: CanvasRenderingContext2D): void;
     addPoint(x: number, y: number): void;
-    setSize(s: number): void;
-    scale(s: number, ctx: CanvasRenderingContext2D): void;
+    setSize(size: number): void;
+    scale(size: number, ctx: CanvasRenderingContext2D): void;
 }
 
 function DisplayStroke(): Displayable {
     const pointsArr: {x: number; y: number}[] = [];
     let lineSize: number;
 
-    function setSize(s: number){
-        lineSize = s;
+    function setSize(size: number){
+        lineSize = size;
     }
 
     function addPoint(x: number, y: number){
@@ -69,12 +69,12 @@ function DisplayStroke(): Displayable {
     }
 
     // Scales the object by s and displays to ctx
-    function scale(s: number, ctx: CanvasRenderingContext2D) {
+    function scale(size: number, ctx: CanvasRenderingContext2D) {
         const scaledArr: {x: number; y: number}[] = [];
-        const scaledLine: number = lineSize * s;
+        const scaledLine: number = lineSize * size;
         for (let i = 0; i < pointsArr.length; i++){
-            const x = pointsArr[i].x * s;
-            const y = pointsArr[i].y * s;
+            const x = pointsArr[i].x * size;
+            const y = pointsArr[i].y * size;
             const tempPoint = {x, y};
             scaledArr.push(tempPoint);
         }
@@ -96,8 +96,8 @@ function DisplaySticker(str: string): Displayable {
     let width: number;
     const sticker = str;
 
-    function setSize(s: number){
-        width = s;
+    function setSize(size: number){
+        width = size;
     }
 
     // Update Point
@@ -113,11 +113,11 @@ function DisplaySticker(str: string): Displayable {
     }
 
     // Scales the object by s and displays to ctx
-    function scale(s: number, ctx: CanvasRenderingContext2D) {
+    function scale(size: number, ctx: CanvasRenderingContext2D) {
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
-        ctx.font = s*width+"px serif";
-        ctx.fillText(sticker, point.x*s, point.y*s)
+        ctx.font = size*width+"px serif";
+        ctx.fillText(sticker, point.x*size, point.y*size)
     }
 
     return {display, addPoint, setSize, scale};
@@ -147,12 +147,12 @@ function DisplayCursor(): Displayable {
     }
 
     // Scales the object by s and displays to ctx
-    function scale(s: number, ctx: CanvasRenderingContext2D) {
+    function scale(size: number, ctx: CanvasRenderingContext2D) {
         // currently there is no intention of displaying a cursor
         // Draw a circle at the point, with lineSize diameter
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.arc(point.x*s, point.y*s, s*(lineSize/2), 0, 2 * Math.PI);
+        ctx.arc(point.x*size, point.y*size, size*(lineSize/2), 0, 2 * Math.PI);
         ctx.stroke();
     }
 
