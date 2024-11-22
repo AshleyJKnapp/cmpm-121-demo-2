@@ -16,7 +16,8 @@ app.innerHTML = APP_NAME;
 const headerDiv = document.createElement("div");
 const audio = document.getElementById('audio') as HTMLAudioElement;
 audio.volume = 0.3;
-audio.play();
+audio.muted = true;
+// audio.play();
 app.append(headerDiv);
 app.append(img);
 header.innerHTML = "human i remember your drawings"
@@ -192,6 +193,7 @@ canvas.addEventListener("mousedown", (event) => {
     redoStack = [];
     undoRedoActiveCheck();
 
+    audio.muted = false;
     audio.play();
 });
 
@@ -217,6 +219,7 @@ canvas.addEventListener("mouseup", (event) => {
         currentLine.display(ctx);
     }
 
+    audio.muted = false;
     audio.play();
 });
 
@@ -336,6 +339,7 @@ clrBtn.addEventListener("click", function () {
     // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    audio.muted = false;
     audio.play();
 });
 
@@ -347,6 +351,7 @@ undoBtn.addEventListener("click", function () {
     }
     undoRedoActiveCheck();
 
+    audio.muted = false;
     audio.play();
 });
 
@@ -358,6 +363,7 @@ redoBtn.addEventListener("click", function () {
     }
     undoRedoActiveCheck();
 
+    audio.muted = false;
     audio.play();
 });
 
@@ -368,6 +374,7 @@ thinBtn.addEventListener("click", function () {
     selectTool(thinBtn);
     stickerMode = false;
 
+    audio.muted = false;
     audio.play();
 });
 
@@ -377,6 +384,7 @@ thickBtn.addEventListener("click", function () {
     selectTool(thickBtn);
     stickerMode = false;
 
+    audio.muted = false;
     audio.play();
 });
 
@@ -387,6 +395,7 @@ addStickerBtn.addEventListener("click", function () {
         createStickerBtn(text!);
     }
 
+    audio.muted = false;
     audio.play();
 });
 
@@ -394,6 +403,7 @@ addStickerBtn.addEventListener("click", function () {
 for (const i in stickerArr){
     createStickerBtn(stickerArr[i]);
 
+    audio.muted = false;
     audio.play();
 }
 
@@ -412,6 +422,7 @@ exportBtn.addEventListener("click", function () {
     anchor.download = "sketchpad.png";
     anchor.click();
 
+    audio.muted = false;
     audio.play();
 });
 
